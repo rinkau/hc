@@ -1,67 +1,13 @@
-
-from collections import Counter
-from heapq import heappush as push
-from heapq import heappop as pop
+from python.types.htree import HTree
 
 
-translation = {} 
-
-def load_file(filename: str) -> tuple[str, dict[str, int]]:
+def load_file(filename: str) -> str:
   try:
     content = open(filename).read()
   except Exception as e:
     print("could not load filname, error:", e, sep="\n")
     exit(1)
-
-  return content, Counter(content)
-
-
-class Node:
-
-  def __init__(self, char, count, lo=None, hi=None, encoding=""):
-    self.char = char
-    self.count = count
-    self.lo = lo
-    self.hi = hi
-    self.encoding = encoding
-
-  def __lt__(self, other):
-    return self.count < other.count
-
-  def __str__(self) -> str:
-    return f"{ord(self.char)}: {self.count}"
-
-
-def build_priority_queue(counter: dict[str, int]) -> list[Node]:
-  heap: list[Node] = []
-  for char, ocurrency in counter.items():
-    push(heap, Node(char, ocurrency))
-  return heap
-
-
-def build_tree(heap: list[Node]) -> Node:
-  while len(heap) > 1:
-    lo = pop(heap)
-    hi = pop(heap)
-    push(heap, Node("", lo.count + hi.count, lo, hi))
-  return pop(heap)
-
-
-def encode_tree(root: Node):
-  global translation
-  if root.lo == None:  # root is a leaf
-    translation[root.char] = root.encoding
-    return
-
-  root.lo.encoding = root.encoding + "0"
-  root.hi.encoding = root.encoding + "1"
-
-  encode_tree(root.lo)
-  encode_tree(root.hi)
-
-
-def encode(content: str) -> str:
-  return "".join([translation[char] for char in content])
+  return content
 
 
 def padding(num: str) -> str:
@@ -70,20 +16,33 @@ def padding(num: str) -> str:
   return num
 
 
-def compress_file(filename: str):
-  global translation
+def dump_to_file(encoded_message: str, filename: str):
+  encoded_bytes = int(encoded_message, 2).to_bytes(
+      (len(encoded_message) + 7) // 8, byteorder='big')
 
-  content, counter = load_file(filename)
-  pq = build_priority_queue(counter)
-  root = build_tree(pq)
-  encode_tree(root)
+  with open(filename, "wb") as f:
+    f.write(encoded_bytes)
 
+  with open(filename, "rb") as f:
+    back_bytes = f.read()
+
+  back = "".join([bin(byte)[2:].zfill(8) for byte in back_bytes])
+  print("got:", back)
+
+
+def compress_file(filename: str, output_file: str=""):
+  # TODO: cleanup the prints, maybe add to a logger
+  content = load_file(filename)
   bin_content = "".join([padding(bin(ord(char))[2:]) for char in content])
-  encoded_message = encode(content)
-  print("send:", encoded_message)
 
-  ratio = len(encoded_message) / len(bin_content)
+  ht = HTree(content)
+  print("send:", ht.encoded_content)
+
+  # TODO: check if the binary representation of the content is correct and makes sense to compare this way
+  ratio = len(ht.encoded_content) / len(bin_content)
   print("ratio:", ratio)
-  return translation, encoded_message
 
-
+  # TODO: write to file
+  if output_file == "":
+    output_file = filename.split(".")[0] + ".hf"
+  # dump_to_file(ht, output_file)
