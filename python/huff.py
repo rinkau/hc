@@ -30,8 +30,7 @@ def dump_to_file(encoded_message: str, filename: str):
   print("got:", back)
 
 
-def compress_file(filename: str, output_file: str=""):
-  # TODO: cleanup the prints, maybe add to a logger
+def compress_file(filename: str):
   content = load_file(filename)
   bin_content = "".join([padding(bin(ord(char))[2:]) for char in content])
 
@@ -42,7 +41,5 @@ def compress_file(filename: str, output_file: str=""):
   ratio = len(ht.encoded_content) / len(bin_content)
   print("ratio:", ratio)
 
-  # TODO: write to file
-  if output_file == "":
-    output_file = filename.split(".")[0] + ".hf"
+  output_file = filename + ".hc"
   # dump_to_file(ht, output_file)
