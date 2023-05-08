@@ -3,7 +3,23 @@
 import argparse
 import os
 
-from huff import compress_file
+from typing import Callable
+
+from compressor import compress_file
+
+
+def validate(filename: str, error_message: str):
+  if os.path.isfile(filename):
+    return
+
+  print(error_message)
+  exit(1)
+
+
+def run_pipeline(filename: str, handler: Callable[[str], None],
+                 error_message: str):
+  validate(filename, error_message)
+  handler(filename)
 
 
 def main():
@@ -25,17 +41,14 @@ def main():
   args = parser.parse_args()
 
   if args.create:
-    if os.path.isfile(args.filename):
-      print(f"Compressing {args.filename}...")
-      compress_file(args.filename)
-    else:
-      print(f"{args.filename} does not exist or is not a file")
+    run_pipeline(args.filename, compress_file,
+                 f"{args.filename} doesn't exist or isn't a file")
+
   elif args.extract:
-    if os.path.isfile(args.filename):
-      # TODO:
-      print(f"Extracting from {args.filename}...")
-    else:
-      print(f"{args.filename} does not exist or is not a file")
+    run_pipeline(args.filename,
+                 lambda x: print(f"Extracting from {args.filename} ..."),
+                 f"{args.filename} doesn't exist or isn't a file")
+
   else:
     parser.print_help()
 

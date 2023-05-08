@@ -1,4 +1,4 @@
-from python.types.htree import HTree
+from util.types import HTree
 
 
 def load_file(filename: str) -> str:

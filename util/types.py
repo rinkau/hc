@@ -2,14 +2,28 @@ from heapq import heappush as push
 from heapq import heappop as pop
 from collections import Counter
 
-from python.types.hnode import HNode
+
+class HNode:
+
+  def __init__(self, char, count, lo=None, hi=None, encoding=""):
+    self.char = char
+    self.count = count
+    self.lo = lo
+    self.hi = hi
+    self.encoding = encoding
+
+  def __lt__(self, other) -> bool:
+    return self.count < other.count
+
+  def __str__(self) -> str:
+    return f"{ord(self.char)}: {self.count}"
 
 
 class HTree:
 
   def __init__(self, content: str):
     self.content = content
-    self.translation = {}
+    self.translation: dict[str, str] = {}
     self.root = self.build_tree()
     self.encode_tree(self.root)
     self.encoded_content = self.encode_content()
